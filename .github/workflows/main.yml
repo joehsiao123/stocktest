@@ -1,31 +1,31 @@
-name: Stock Monitor
+name: Stock Monitor Test
 
 on:
   schedule:
-    # 台灣時間週一至週五 09:00 - 13:35，每 10 分鐘檢查一次
-    # UTC 時間為 01:00 - 05:35
-    - cron: '*/10 1-5 * * 1-5'
-  workflow_dispatch: # 允許手動點擊執行測試
+    # 每一分鐘執行一次 (週一至週五台股盤中)
+    - cron: '* 1-5 * * 1-5'
+  workflow_dispatch: # 保留手動測試按鈕
 
 jobs:
-  check-stock:
+  test-api:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Checkout code
-        # 更新至 v4 (支援 Node 20+) 或更高版本
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Set up Python
-        # 更新至 v5 (支援最新 Node 環境)
         uses: actions/setup-python@v5
         with:
           python-version: '3.9'
 
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
-      - name: Run monitor
+      - name: Run test
         env:
           FUGLE_API_KEY: ${{ secrets.FUGLE_API_KEY }}
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}

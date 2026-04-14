@@ -12,10 +12,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        # 更新至 v4 (支援 Node 20+) 或更高版本
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        # 更新至 v5 (支援最新 Node 環境)
+        uses: actions/setup-python@v5
         with:
           python-version: '3.9'
 

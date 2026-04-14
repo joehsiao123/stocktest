@@ -1,32 +1,39 @@
-name: Stock Monitor Test
+name: Price Jump Monitor
 
 on:
   schedule:
-    # 每一分鐘執行一次 (週一至週五台股盤中)
-    - cron: '* 1-5 * * 1-5'
-  workflow_dispatch: # 保留手動測試按鈕
+    - cron: '* * * * *'
+  workflow_dispatch:
+
+# 給予 Actions 寫入 Repo 的權限 (才能存檔)
+permissions:
+  contents: write
 
 jobs:
-  test-api:
+  monitor:
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.11'
 
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run test
+      - name: Run monitor
         env:
           FUGLE_API_KEY: ${{ secrets.FUGLE_API_KEY }}
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: python monitor.py
+
+      - name: Commit last price
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add last_price.txt
+          git commit -m "Update last price [skip ci]" || exit 0
+          git push

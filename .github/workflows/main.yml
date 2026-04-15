@@ -34,6 +34,18 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          
+          # 1. 先抓取遠端最新變更
+          git fetch origin main
+          
+          # 2. 如果檔案有變動，才進行後續動作
           git add last_price.txt
+          
+          # 3. 嘗試提交，如果沒有變動則跳過 (exit 0)
           git commit -m "Update last price [skip ci]" || exit 0
-          git push
+          
+          # 4. 關鍵：使用 rebase 模式拉取遠端更新，避免衝突
+          git pull --rebase origin main
+          
+          # 5. 推送回遠端
+          git push origin main

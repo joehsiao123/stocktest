@@ -1,13 +1,9 @@
-name: Price Jump Monitor
+name: Futures Jump Monitor
 
 on:
   schedule:
-    - cron: '* * * * *'
+    - cron: '* * * * *' # 每分鐘跑一次
   workflow_dispatch:
-
-# 給予 Actions 寫入 Repo 的權限 (才能存檔)
-permissions:
-  contents: write
 
 jobs:
   monitor:
@@ -15,6 +11,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Restore last price cache
+        uses: actions/cache/restore@v4
+        with:
+          path: last_f_price.txt
+          key: fut-price-${{ github.run_id }}
+          restore-keys: |
+            fut-price-
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -30,22 +34,9 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: python monitor.py
 
-      - name: Commit last price
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          
-          # 1. 先抓取遠端最新變更
-          git fetch origin main
-          
-          # 2. 如果檔案有變動，才進行後續動作
-          git add last_price.txt
-          
-          # 3. 嘗試提交，如果沒有變動則跳過 (exit 0)
-          git commit -m "Update last price [skip ci]" || exit 0
-          
-          # 4. 關鍵：使用 rebase 模式拉取遠端更新，避免衝突
-          git pull --rebase origin main
-          
-          # 5. 推送回遠端
-          git push origin main
+      - name: Save last price cache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: last_f_price.txt
+          key: fut-price-${{ github.run_timestamp }}
